@@ -140,7 +140,7 @@ namespace NewHorizons.Components
 
             _astroObject.SetOrbitalParametersFromTrueAnomaly(orbitalParameters.eccentricity, orbitalParameters.semiMajorAxis, orbitalParameters.inclination, orbitalParameters.argumentOfPeriapsis, orbitalParameters.longitudeOfAscendingNode, orbitalParameters.trueAnomaly);
 
-            PlanetCreationHandler.UpdatePosition(gameObject, orbitalParameters, primaryBody, _astroObject);
+            PlanetCreationHandler.Instance.UpdatePosition(gameObject, orbitalParameters, primaryBody, _astroObject);
 
             if (!Physics.autoSyncTransforms)
             {

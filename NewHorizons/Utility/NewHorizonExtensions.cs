@@ -229,5 +229,27 @@ namespace NewHorizons.Utility
                 return @default;
             }
         }
+
+        public static IEnumerable<Type> GetDerivedGenericTypes(this Type type)
+        {
+            return Main.MountedAddons
+                .Select(x => x.GetType().Assembly)
+                .Append(type.Assembly)
+                .SelectMany(x => x.GetTypes())
+                .Where(t => t.BaseType != null && t.BaseType.IsGenericType &&
+                    t.BaseType.GetGenericTypeDefinition() == type)
+                .OrderBy(x => x.FullName);
+        }
+
+        public static IEnumerable<Type> GetDerivedTypes(this Type type)
+        {
+            // Stolen from QSB
+            return Main.MountedAddons
+                .Select(x => x.GetType().Assembly)
+                .Append(type.Assembly)
+                .SelectMany(x => x.GetTypes())
+                .Where(x => !x.IsInterface && !x.IsAbstract && type.IsAssignableFrom(x))
+                .OrderBy(x => x.FullName);
+        }
     }
 }

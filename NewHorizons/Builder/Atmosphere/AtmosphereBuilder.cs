@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace NewHorizons.Builder.Atmosphere
 {
-    public class AtmosphereBuilder : Builder<AtmosphereModule>, IProxyBuilder<AtmosphereModule>
+    public class AtmosphereBuilder : AbstractBuilder<AtmosphereModule>, IProxyBuilder<AtmosphereModule>
     {
         private static readonly int InnerRadius = Shader.PropertyToID("_InnerRadius");
         private static readonly int OuterRadius = Shader.PropertyToID("_OuterRadius");
@@ -19,11 +19,11 @@ namespace NewHorizons.Builder.Atmosphere
 
         public override void OnSceneLoaded(Scene scene) => Skys.Clear();
 
-        public override (GameObject, Component) Make(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule) =>
-            (MakeInternal(planetGO, sector, atmosphereModule, 0, false), null);
+        public override GameObject Make(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule, BaseModule baseModule) =>
+            MakeInternal(planetGO, sector, atmosphereModule, baseModule.surfaceSize, false);
 
-        public (GameObject, Component) MakeProxy(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule) =>
-            (MakeInternal(planetGO, sector, atmosphereModule, 0, true), null);
+        public GameObject MakeProxy(GameObject planetGO, AtmosphereModule atmosphereModule, BaseModule baseModule) =>
+            MakeInternal(planetGO, null, atmosphereModule, baseModule.surfaceSize, true);
 
         private GameObject MakeInternal(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule, float surfaceSize, bool proxy = false)
         {

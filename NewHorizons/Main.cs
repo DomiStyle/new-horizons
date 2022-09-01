@@ -169,6 +169,8 @@ namespace NewHorizons
             // Patches
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
 
+            gameObject.AddComponent<PlanetCreationHandler>();
+
             OnChangeStarSystem = new StarSystemEvent();
             OnStarSystemLoaded = new StarSystemEvent();
             OnPlanetLoaded = new StarSystemEvent();
@@ -306,7 +308,6 @@ namespace NewHorizons
                 StreamingHandler.Init();
                 AudioTypeHandler.Init();
                 RemoteHandler.Init();
-                AtmosphereBuilder.Init();
                 BrambleNodeBuilder.Init(BodyDict[CurrentStarSystem].Select(x => x.Config).Where(x => x.Bramble?.dimension != null).ToArray());
                 StarEvolutionController.Init();
 
@@ -320,7 +321,7 @@ namespace NewHorizons
                         SupernovaEffectBuilder.ReplaceVanillaWithNH(supernovaPlanetEffectController);
                     }
 
-                    PlanetCreationHandler.Init(BodyDict[CurrentStarSystem]);
+                    PlanetCreationHandler.Instance.Init(BodyDict[CurrentStarSystem]);
 
                     VesselWarpHandler.LoadVessel();
                     SystemCreationHandler.LoadSystem(SystemDict[CurrentStarSystem]);
@@ -469,7 +470,7 @@ namespace NewHorizons
         public void EnableWarpDrive()
         {
             Logger.LogVerbose("Setting up warp drive");
-            PlanetCreationHandler.LoadBody(LoadConfig(this, "Assets/WarpDriveConfig.json"));
+            PlanetCreationHandler.Instance.LoadBody(LoadConfig(this, "Assets/WarpDriveConfig.json"));
             HasWarpDrive = true;
         }
 

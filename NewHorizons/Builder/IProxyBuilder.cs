@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NewHorizons.External;
+using NewHorizons.External.Modules;
 using UnityEngine;
 
 namespace NewHorizons.Builder
 {
     internal interface IProxyBuilder<T> where T : Module
     {
-        public abstract (GameObject gameObject, Component component) MakeProxy(GameObject root, Sector sector, T module);
+        public abstract GameObject MakeProxy(GameObject root, T module, BaseModule baseModule);
     }
 }

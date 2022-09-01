@@ -1,3 +1,4 @@
+using NewHorizons.Builder;
 using NewHorizons.Builder.Atmosphere;
 using NewHorizons.Builder.Body;
 using NewHorizons.Builder.General;
@@ -6,6 +7,8 @@ using NewHorizons.Builder.Props;
 using NewHorizons.Builder.Volumes;
 using NewHorizons.Components;
 using NewHorizons.Components.Orbital;
+using NewHorizons.External;
+using NewHorizons.External.Modules;
 using NewHorizons.OtherMods.OWRichPresence;
 using NewHorizons.Utility;
 using System;
@@ -16,17 +19,36 @@ using Logger = NewHorizons.Utility.Logger;
 
 namespace NewHorizons.Handlers
 {
-    public static class PlanetCreationHandler
+    public class PlanetCreationHandler : MonoBehaviour
     {
-        private static List<NewHorizonsBody> _nextPassBodies = new List<NewHorizonsBody>();
+        private List<NewHorizonsBody> _nextPassBodies = new List<NewHorizonsBody>();
 
         // Stock bodies being updated
-        private static Dictionary<NHAstroObject, NewHorizonsBody> _existingBodyDict;
+        private Dictionary<NHAstroObject, NewHorizonsBody> _existingBodyDict;
 
         // Custom bodies being created
-        private static Dictionary<NHAstroObject, NewHorizonsBody> _customBodyDict;
+        private Dictionary<NHAstroObject, NewHorizonsBody> _customBodyDict;
 
-        public static void Init(List<NewHorizonsBody> bodies)
+        public static PlanetCreationHandler Instance;
+
+        private Dictionary<Type, AbstractBuilder<Module>> _builders;
+
+        public AbstractBuilder<Module> GetBuilder(Module module) => _builders[module.GetType()];
+
+        public void Awake()
+        {
+            Instance = this;
+
+            _builders = new();
+
+            foreach (var type in typeof(AbstractBuilder<>).GetDerivedTypes())
+            {
+                Logger.LogVerbose($"Creating builder for {type}");
+                _builders.Add(type, (AbstractBuilder<Module>)Activator.CreateInstance(type));
+            }
+        }
+
+        public void Init(List<NewHorizonsBody> bodies)
         {
             Main.FurthestOrbit = 30000;
 
@@ -129,7 +151,7 @@ namespace NewHorizons.Handlers
             if (Main.SystemDict[Main.Instance.CurrentStarSystem].Config.destroyStockPlanets) PlanetDestructionHandler.RemoveSolarSystem();
         }
 
-        public static bool LoadBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
+        public bool LoadBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
         {
             // I don't remember doing this why is it exceptions what am I doing
             GameObject existingPlanet = null;
@@ -262,7 +284,7 @@ namespace NewHorizons.Handlers
             return true;
         }
 
-        public static Sector CreateSectorFromParent(GameObject planetGO, OWRigidbody rigidbody)
+        private Sector CreateSectorFromParent(GameObject planetGO, OWRigidbody rigidbody)
         {
             switch (planetGO.name)
             {
@@ -282,7 +304,7 @@ namespace NewHorizons.Handlers
         }
 
         // Called when updating an existing planet
-        public static GameObject UpdateBody(NewHorizonsBody body, GameObject go)
+        private GameObject UpdateBody(NewHorizonsBody body, GameObject go)
         {
             Logger.Log($"Updating existing Object {go.name}");
 
@@ -302,7 +324,7 @@ namespace NewHorizons.Handlers
         }
 
         // Only called when making new planets
-        public static GameObject GenerateBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
+        private GameObject GenerateBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
         {
             if (body.Config?.Bramble?.dimension != null)
             {
@@ -314,7 +336,7 @@ namespace NewHorizons.Handlers
             }
         }
 
-        public static GameObject GenerateBrambleDimensionBody(NewHorizonsBody body)
+        private GameObject GenerateBrambleDimensionBody(NewHorizonsBody body)
         {
             var go = new GameObject(body.Config.name.Replace(" ", "").Replace("'", "") + "_Body");
             go.SetActive(false);
@@ -344,7 +366,7 @@ namespace NewHorizons.Handlers
             return go;
         }
 
-        public static GameObject GenerateStandardBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
+        private GameObject GenerateStandardBody(NewHorizonsBody body, bool defaultPrimaryToSun = false)
         {
             // Focal points are weird
             if (body.Config.FocalPoint != null) FocalPointBuilder.ValidateConfig(body.Config);
@@ -455,7 +477,7 @@ namespace NewHorizons.Handlers
             return go;
         }
 
-        private static float GetSphereOfInfluence(NewHorizonsBody body)
+        private float GetSphereOfInfluence(NewHorizonsBody body)
         {
             var atmoSize = body.Config.Atmosphere != null ? body.Config.Atmosphere.size : 0f;
             float sphereOfInfluence = Mathf.Max(Mathf.Max(atmoSize, 50), body.Config.Base.surfaceSize * 2f);
@@ -465,7 +487,7 @@ namespace NewHorizons.Handlers
         }
 
         // What is called both on existing planets and new planets
-        private static GameObject SharedGenerateBody(NewHorizonsBody body, GameObject go, Sector sector, OWRigidbody rb)
+        private GameObject SharedGenerateBody(NewHorizonsBody body, GameObject go, Sector sector, OWRigidbody rb)
         {
             var sphereOfInfluence = GetSphereOfInfluence(body);
 
@@ -601,7 +623,7 @@ namespace NewHorizons.Handlers
                     fog = FogBuilder.Make(go, sector, body.Config.Atmosphere);
                 }
 
-                atmosphere = AtmosphereBuilder.Make(go, sector, body.Config.Atmosphere, surfaceSize).GetComponentInChildren<LODGroup>();
+                atmosphere = _builders[typeof(AtmosphereModule)].Make(go, sector, body.Config.Atmosphere, body.Config.Base).GetComponentInChildren<LODGroup>();
             }
 
             if (body.Config.Props != null)
@@ -636,7 +658,7 @@ namespace NewHorizons.Handlers
             return go;
         }
 
-        public static void UpdateBodyOrbit(NewHorizonsBody body, GameObject go)
+        private void UpdateBodyOrbit(NewHorizonsBody body, GameObject go)
         {
             Logger.Log($"Updating orbit of [{body.Config.name}]");
 
@@ -751,7 +773,7 @@ namespace NewHorizons.Handlers
             return;
         }
 
-        public static void UpdatePosition(GameObject go, IOrbitalParameters orbit, AstroObject primaryBody, AstroObject secondaryBody)
+        public void UpdatePosition(GameObject go, IOrbitalParameters orbit, AstroObject primaryBody, AstroObject secondaryBody)
         {
             Logger.LogVerbose($"Placing [{secondaryBody?.name}] around [{primaryBody?.name}]");
 
@@ -769,7 +791,7 @@ namespace NewHorizons.Handlers
             }
         }
 
-        public static void SetPositionFromVector(GameObject go, Vector3 position)
+        private void SetPositionFromVector(GameObject go, Vector3 position)
         {
             go.transform.parent = Locator.GetRootTransform();
             go.transform.position = position;
@@ -780,7 +802,7 @@ namespace NewHorizons.Handlers
             }
         }
 
-        private static void RemoveChildren(GameObject go, NewHorizonsBody body)
+        private void RemoveChildren(GameObject go, NewHorizonsBody body)
         {
             var goPath = go.transform.GetPath();
             var transforms = go.GetComponentsInChildren<Transform>(true);

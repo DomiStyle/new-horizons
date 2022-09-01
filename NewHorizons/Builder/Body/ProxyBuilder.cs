@@ -1,7 +1,10 @@
+using Mono.Security.Cryptography;
 using NewHorizons.Builder.Atmosphere;
 using NewHorizons.Builder.Props;
 using NewHorizons.Components;
 using NewHorizons.Components.SizeControllers;
+using NewHorizons.External;
+using NewHorizons.External.Modules;
 using NewHorizons.External.Modules.VariableSize;
 using NewHorizons.Handlers;
 using NewHorizons.Utility;
@@ -16,6 +19,12 @@ namespace NewHorizons.Builder.Body
         private static Material lavaMaterial;
 
         private static readonly int EmissionColor = Shader.PropertyToID("_EmissionColor");
+
+        public static GameObject UseProxyBuilder(GameObject root, Module module, BaseModule baseModule)
+        {
+            var proxyBuilder = PlanetCreationHandler.Instance.GetBuilder(module) as IProxyBuilder<Module>;
+            return proxyBuilder.MakeProxy(root, module, baseModule);
+        }
 
         public static void Make(GameObject planetGO, NewHorizonsBody body, NewHorizonsBody remnant)
         {
@@ -101,7 +110,7 @@ namespace NewHorizons.Builder.Body
 
                 if (body.Config.Atmosphere != null)
                 {
-                    atmosphere = AtmosphereBuilder.Make(proxy, null, body.Config.Atmosphere, body.Config.Base.surfaceSize, true).GetComponentInChildren<MeshRenderer>();
+                    atmosphere = UseProxyBuilder(proxy, body.Config.Atmosphere, body.Config.Base).GetComponentInChildren<MeshRenderer>();
 
                     if (body.Config.Atmosphere.fogSize != 0)
                     {
