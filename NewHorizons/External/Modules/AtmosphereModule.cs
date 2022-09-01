@@ -33,7 +33,7 @@ namespace NewHorizons.External.Modules
     }
 
     [JsonObject]
-    public class AtmosphereModule
+    public class AtmosphereModule : Module
     {
         /// <summary>
         /// Colour of atmospheric shader on the planet.

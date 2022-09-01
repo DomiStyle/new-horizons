@@ -2,9 +2,11 @@ using NewHorizons.External.Modules;
 using NewHorizons.Utility;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 namespace NewHorizons.Builder.Atmosphere
 {
-    public static class AtmosphereBuilder
+    public class AtmosphereBuilder : Builder<AtmosphereModule>, IProxyBuilder<AtmosphereModule>
     {
         private static readonly int InnerRadius = Shader.PropertyToID("_InnerRadius");
         private static readonly int OuterRadius = Shader.PropertyToID("_OuterRadius");
@@ -13,14 +15,19 @@ namespace NewHorizons.Builder.Atmosphere
 
         public static readonly List<(GameObject, Material)> Skys = new();
 
-        public static void Init()
-        {
-            Skys.Clear();
-        }
+        public override bool WorksAtEye => false;
 
-        public static GameObject Make(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule, float surfaceSize, bool proxy = false)
+        public override void OnSceneLoaded(Scene scene) => Skys.Clear();
+
+        public override (GameObject, Component) Make(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule) =>
+            (MakeInternal(planetGO, sector, atmosphereModule, 0, false), null);
+
+        public (GameObject, Component) MakeProxy(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule) =>
+            (MakeInternal(planetGO, sector, atmosphereModule, 0, true), null);
+
+        private GameObject MakeInternal(GameObject planetGO, Sector sector, AtmosphereModule atmosphereModule, float surfaceSize, bool proxy = false)
         {
-            GameObject atmoGO = new GameObject("Atmosphere");
+            var atmoGO = new GameObject("Atmosphere");
             atmoGO.SetActive(false);
             atmoGO.transform.parent = sector?.transform ?? planetGO.transform;
 
