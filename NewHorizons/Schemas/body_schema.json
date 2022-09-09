@@ -2587,7 +2587,8 @@
         "FIRE",
         "SANDFALL",
         "ELECTRICITY",
-        "RAPIDS"
+        "RAPIDS",
+        "RIVERHEAT"
       ],
       "enum": [
         "none",
@@ -2597,7 +2598,8 @@
         "fire",
         "sandfall",
         "electricity",
-        "rapids"
+        "rapids",
+        "riverHeat"
       ]
     },
     "InstantDamageType": {
