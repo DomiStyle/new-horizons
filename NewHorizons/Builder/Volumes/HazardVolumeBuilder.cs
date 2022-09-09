@@ -60,7 +60,9 @@ namespace NewHorizons.Builder.Volumes
             }
             else if (info.type == VolumesModule.HazardVolumeInfo.HazardType.ELECTRICITY)
             {
-                hazardVolume = go.AddComponent<ElectricityVolume>();
+                var electricityVolume = go.AddComponent<ElectricityVolume>();
+                electricityVolume._shockAudioPool = new OWAudioSource[0];
+                hazardVolume = electricityVolume;
             }
             else
             {
